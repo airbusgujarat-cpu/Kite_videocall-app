@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kite</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Login Screen */
+    .login-container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(ellipse at 50% 50%, #2b3340 0%, #151921 70%, #0d0f14 100%);
+    }
+
+    .web-card {
+      width: 440px;
+      padding: 40px 36px 36px 36px;
+      border-radius: 28px;
+      background: linear-gradient(135deg, rgba(80, 88, 102, 0.45) 0%, rgba(35, 40, 50, 0.7) 100%);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      border: 3px solid #7d8594;
+      backdrop-filter: blur(12px);
+      text-align: center;
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 18px;
+      font-size: 16px;
+      opacity: 0.65;
+      pointer-events: none;
+    }
+
+    .web-card input {
+      width: 100%;
+      height: 48px;
+      padding: 0 20px 0 46px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      font-size: 15px;
+      outline: none;
+    }
+
+    .btn-metallic {
+      width: 100%;
+      height: 48px;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      background: linear-gradient(180deg, #d2d8e4 0%, #768194 48%, #9aa3b2 52%, #b8c0cf 100%);
+      color: #1a1e24;
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    /* Waiting Dashboard */
+    #dashboard-view {
+      background: #1e222d;
+      padding: 30px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+
+    .primary-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 24px;
+      background: #0076ff;
+      color: #fff;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+    .primary-btn:disabled {
+      background: #444b58;
+      cursor: not-allowed;
+    }
+
+    /* -------------------------------------------------------------
+       CALL STAGE (DYNAMIC PARTICIPANT LAYOUT)
+       ------------------------------------------------------------- */
+    #call-stage {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+      padding: 10px;
+      display: flex;
+      box-sizing: border-box;
+    }
+
+    .desktop-call-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 10px;
+    }
+
+    /* Left Panel (Fixed For You) */
+    .left-panel {
+      position: relative;
+      background: #15181f;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      height: 100%;
+    }
+
+    .left-panel video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transform: scaleX(-1); /* mirror self view */
+    }
+
+    /* Right Large Stage (Dynamic Grid for Remote Participants) */
+    .right-stage {
+      position: relative;
+      display: grid;
+      gap: 10px;
+      width: 100%;
+      height: 100%;
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr;
+    }
+
+    /* Dynamic Grid Configurations */
+    .right-stage.grid-1 {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr;
+    }
+
+    .right-stage.grid-2 {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr;
+    }
+
+    .right-stage.grid-3,
+    .right-stage.grid-4 {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+
+    .participant-card {
+      position: relative;
+      background: #15181f;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      height: 100%;
+      width: 100%;
+    }
+
+    .participant-card video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .feed-label {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(0, 0, 0, 0.65);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      z-index: 5;
+    }
+
+    /* Floating Web Controls Dock */
+    .web-dock-container {
+      position: absolute;
+      bottom: 24px;
+      left: 60%;
+      transform: translateX(-50%);
+      background: rgba(30, 32, 38, 0.88);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      padding: 8px 18px 10px 18px;
+      border-radius: 28px;
+      display: flex;
+      align-items: flex-end;
+      gap: 18px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      z-index: 100;
+    }
+
+    .dock-action-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .dock-action-item span {
+      font-size: 10px;
+      margin-top: 5px;
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 500;
+    }
+
+    .dock-circle-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 16px;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.14);
+      transition: all 0.2s;
+    }
+
+    .btn-green-screenshot .dock-circle-btn {
+      background: #10b981;
+      border-radius: 12px;
+      color: #fff;
+    }
+
+    .btn-white-camera .dock-circle-btn {
+      background: #ffffff;
+      color: #111;
+    }
+
+    .btn-red-end .dock-circle-btn {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .dock-action-item.off-state .dock-circle-btn {
+      background: #ef4444 !important;
+      color: #fff !important;
+    }
+
+    .mobile-call-container {
+      display: none;
+    }
+
+    /* Mobile Layout */
+    @media (max-width: 768px) {
+      .desktop-call-container {
+        display: none !important;
+      }
+
+      .mobile-call-container {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        gap: 8px;
+        padding-bottom: 140px;
+      }
+
+      .m-feed-box {
+        position: relative;
+        background: #161920;
+        border-radius: 18px;
+        overflow: hidden;
+      }
+
+      .m-feed-box video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .m-self {
+        height: 38%;
+      }
+
+      .m-stage {
+        flex: 1;
+        display: grid;
+        gap: 8px;
+      }
+
+      .mobile-call-sheet {
+        position: fixed;
+        bottom: 12px;
+        left: 12px;
+        right: 12px;
+        background: rgba(30, 32, 38, 0.94);
+        backdrop-filter: blur(24px);
+        border-radius: 26px;
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        z-index: 100;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .mobile-top-pills {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .mobile-pill-timer {
+        background: #2b303c;
+        border-radius: 20px;
+        padding: 6px 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #fff;
+      }
+
+      .mobile-pill-timer i {
+        color: #22c55e;
+      }
+
+      .mobile-pill-end {
+        background: #ef4444;
+        border: none;
+        color: #fff;
+        border-radius: 20px;
+        padding: 7px 18px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .mobile-bottom-actions {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+      }
+
+      .m-action-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: none;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+      }
+
+      .m-action-btn .m-circle {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 14px;
+        margin-bottom: 4px;
+      }
+
+      .m-action-btn span {
+        font-size: 9px;
+        color: #9ca3af;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Screen 1: Login -->
+  <div id="login-view" class="login-container">
+    <form id="login-form" class="web-card" onsubmit="return false;">
+      <h2 style="margin-bottom: 24px; font-size: 26px;">Login</h2>
+      
+      <div class="input-group">
+        <span class="input-icon">👤</span>
+        <input type="text" id="username" placeholder="Username (alice or bob)" autocomplete="off">
+      </div>
+
+      <div class="input-group">
+        <span class="input-icon">🔑</span>
+        <input type="password" id="password" placeholder="Password (123 or 456)">
+      </div>
+
+      <button type="submit" id="login-btn" class="btn-metallic">
+        <img src="favicon.png" alt="" style="width: 20px;">
+        <span>Log In</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- Screen 2: Dashboard -->
+  <div id="dashboard-view" class="hidden">
+    <h2 id="current-user-display" style="color: #0076ff; margin-bottom: 12px;">Alice</h2>
+    <div id="contact-area">
+      <p id="target-status" style="color: #9ca3af; font-size: 15px;">Waiting for user...</p>
+      <button id="call-btn" class="primary-btn" disabled>Call</button>
+    </div>
+  </div>
+
+  <!-- Screen 3: Call Stage -->
+  <div id="call-stage" class="hidden">
+
+    <!-- DESKTOP CALL CONTAINER -->
+    <div class="desktop-call-container">
+      
+      <!-- LEFT PANEL: Always "You" (Alice if Alice, Bob if Bob) -->
+      <div class="left-panel">
+        <span class="feed-label" id="label-self">You</span>
+        <video id="self-video" autoplay playsinline muted></video>
+      </div>
+
+      <!-- RIGHT PANEL: Dynamic grid of remote participants -->
+      <div class="right-stage" id="remote-participants-container">
+        <!-- Dynamically injected participant cards go here -->
+      </div>
+
+      <!-- Floating Controls Dock -->
+      <div class="web-dock-container">
+        <button id="web-btn-shot" class="dock-action-item btn-green-screenshot" title="Screenshot">
+          <div class="dock-circle-btn"><i class="fa-solid fa-camera"></i></div>
+          <span>Screenshot</span>
+        </button>
+
+        <button id="web-btn-mute" class="dock-action-item" title="Mute">
+          <div class="dock-circle-btn"><i class="fa-solid fa-microphone"></i></div>
+          <span>Mute</span>
+        </button>
+
+        <button id="web-btn-cam" class="dock-action-item btn-white-camera" title="Camera">
+          <div class="dock-circle-btn"><i class="fa-solid fa-video"></i></div>
+          <span>Camera</span>
+        </button>
+
+        <button id="web-btn-share" class="dock-action-item" title="Screen Share">
+          <div class="dock-circle-btn"><i class="fa-solid fa-desktop"></i></div>
+          <span>Screen Share</span>
+        </button>
+
+        <button id="web-btn-end" class="dock-action-item btn-red-end" title="End">
+          <div class="dock-circle-btn"><i class="fa-solid fa-xmark"></i></div>
+          <span>End</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- MOBILE CALL CONTAINER -->
+    <div class="mobile-call-container">
+      <div class="m-feed-box m-self">
+        <span class="feed-label" id="label-self-mobile">You</span>
+        <video id="self-video-mobile" autoplay playsinline muted></video>
+      </div>
+
+      <div class="m-feed-box m-stage" id="remote-mobile-container">
+        <!-- Remote feeds for mobile injected here -->
+      </div>
+
+      <div class="mobile-call-sheet">
+        <div class="mobile-top-pills">
+          <div class="mobile-pill-timer">
+            <i class="fa-solid fa-video"></i>
+            <span id="call-timer-mobile">0:00</span>
+          </div>
+          <button id="mob-btn-end" class="mobile-pill-end">
+            <i class="fa-solid fa-xmark"></i> End Call
+          </button>
+        </div>
+
+        <div class="mobile-bottom-actions">
+          <button id="mob-btn-mute" class="m-action-btn">
+            <div class="m-circle"><i class="fa-solid fa-microphone"></i></div>
+            <span>Mute</span>
+          </button>
+          <button id="mob-btn-flip" class="m-action-btn">
+            <div class="m-circle"><i class="fa-solid fa-camera-rotate"></i></div>
+            <span>Flip Camera</span>
+          </button>
+          <button id="mob-btn-share" class="m-action-btn">
+            <div class="m-circle"><i class="fa-solid fa-desktop"></i></div>
+            <span>Screen Share</span>
+          </button>
+          <button id="mob-btn-shot" class="m-action-btn">
+            <div class="m-circle"><i class="fa-solid fa-camera"></i></div>
+            <span>Screenshot</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
